@@ -1,10 +1,4 @@
-import fetch from 'node-fetch'
-import dotenv from 'dotenv'
-
-dotenv.config()
-
-const VK_API_URL = 'https://api.vk.com/method/wall.post'
-const VK_API_VERSION = '5.131'
+import axios from 'axios'
 
 export async function postToVK(message) {
   const token = process.env.VK_ACCESS_TOKEN
@@ -15,34 +9,28 @@ export async function postToVK(message) {
     return
   }
 
-  const payload = {
-    owner_id: `-${groupId}`, // именно с минусом!
+  const params = {
+    owner_id: `-${groupId}`,
     from_group: 1,
-    message: message,
-    v: VK_API_VERSION,
-    access_token: token
+    message,
+    access_token: token,
+    v: '5.199'
   }
 
-  console.log('🌐 Sending to VK with payload:', payload)
+  console.log('🌐 Отправка в VK с параметрами:', params)
 
   try {
-    const response = await fetch(VK_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(payload)
-    })
+    const res = await axios.get('https://api.vk.com/method/wall.post', { params })
+    console.log('📦 Ответ VK API:', JSON.stringify(res.data, null, 2))
 
-    const data = await response.json()
-    console.log('📦 VK API Response:', JSON.stringify(data, null, 2))
-
-    if (data.error) {
-      console.error('❌ VK API Error:', data.error)
-      throw new Error(data.error.error_msg || 'Unknown VK API error')
+    if (res.data.error) {
+      console.error('❌ VK API Error:', res.data.error)
+    } else {
+      console.log('✅ Пост опубликован в VK:', res.data.response.post_id)
     }
 
-    return data.response
+    return res.data
   } catch (err) {
-    console.error('❌ VK POST failed:', err)
-    throw err
+    console.error('❌ Ошибка при отправке в VK:', err.message)
   }
 }

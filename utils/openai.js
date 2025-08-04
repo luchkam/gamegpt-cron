@@ -142,4 +142,4 @@ export async function getReplyFromAssistant(messagesArray) {
     return 'Произошла ошибка при получении ответа от ассистента.'
   }
 }
-}
+

@@ -93,7 +93,11 @@ export async function getReplyFromAssistant(messagesArray) {
     console.log('⚙️ Запускаем ассистента...')
     const run = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      },
       body: JSON.stringify({ assistant_id: assistantId })
     }).then(r => r.json())
     console.log('📄 Ответ от /runs:', run)

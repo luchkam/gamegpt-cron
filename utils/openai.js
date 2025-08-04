@@ -99,5 +99,10 @@ export async function getReplyFromAssistant(messagesArray) {
     headers: { Authorization: `Bearer ${apiKey}` }
   }).then(r => r.json())
 
-  return messages.data[0].content[0].text.value
+  const assistantMessage = messages.data.find(m => m.role === 'assistant')
+if (!assistantMessage || !assistantMessage.content?.[0]?.text?.value) {
+  console.log('⚠️ Не удалось получить ответ от Assistant. Полные данные:', messages)
+  return 'Извини, я пока не могу ответить на это сообщение.'
+}
+return assistantMessage.content[0].text.value
 }

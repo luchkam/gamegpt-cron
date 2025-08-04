@@ -17,9 +17,12 @@ export async function handleTelegramUpdate(update) {
     const cleanedText = msg.text.replace(new RegExp(`@${botUsername}`, 'gi'), '').trim()
 
     const context = [cleanedText] // можно позже добавить историю
+    console.log('📥 Контекст сообщения:', context)
     const reply = await getReplyFromAssistant(context)
+    console.log('🤖 Ответ от Assistant:', reply)
 
     // Отправляем ответ в тот же чат и с reply
+    console.log('📤 Отправка в Telegram — chat_id:', msg.chat.id, 'reply_to_message_id:', msg.message_id)
     await sendMessageToTelegram(reply, msg.chat.id, msg.message_id)
   }
 }

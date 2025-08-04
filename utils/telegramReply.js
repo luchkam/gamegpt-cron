@@ -7,6 +7,8 @@ export async function handleTelegramUpdate(update) {
   if (!update.message || !update.message.text) return
 
   const msg = update.message
+  console.log('📦 Полный объект msg:')
+  console.dir(msg, { depth: null })
   const botUsername = process.env.TELEGRAM_BOT_NAME?.toLowerCase() // example: gamegpt_poster_bot
 
   const isMention = msg.text.toLowerCase().includes(`@${botUsername}`)

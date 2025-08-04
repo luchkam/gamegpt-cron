@@ -83,7 +83,11 @@ export async function getReplyFromAssistant(messagesArray) {
     console.log('📤 Отправляем сообщение в thread...')
     await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      },
       body: JSON.stringify({
         role: 'user',
         content: messagesArray.join('\n')
@@ -108,7 +112,10 @@ export async function getReplyFromAssistant(messagesArray) {
     while (status !== 'completed' && status !== 'failed') {
       await new Promise(r => setTimeout(r, 1500))
       const runStatus = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
-        headers: { Authorization: `Bearer ${apiKey}` }
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'OpenAI-Beta': 'assistants=v2'
+        }
       }).then(r => r.json())
       status = runStatus.status
       console.log('⏳ Статус выполнения:', status)
@@ -116,7 +123,10 @@ export async function getReplyFromAssistant(messagesArray) {
 
     console.log('📩 Получаем ответы...')
     const messages = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      headers: { Authorization: `Bearer ${apiKey}` }
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'OpenAI-Beta': 'assistants=v2'
+      }
     }).then(r => r.json())
 
     const assistantMessage = messages.data.find(m => m.role === 'assistant')
@@ -131,4 +141,5 @@ export async function getReplyFromAssistant(messagesArray) {
     console.error('❌ Ошибка в getReplyFromAssistant:', error)
     return 'Произошла ошибка при получении ответа от ассистента.'
   }
+}
 }

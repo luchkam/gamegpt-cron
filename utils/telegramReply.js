@@ -26,7 +26,7 @@ export async function handleTelegramUpdate(update) {
     await sendMessageToTelegram({
       chat_id: msg.chat.id,
       text: reply,
-      message_thread_id: msg.message_thread_id || undefined
+      message_thread_id: msg.message_thread_id || undefined,
       reply_to_message_id: msg.message_id
     })
   }

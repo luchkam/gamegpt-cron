@@ -68,9 +68,16 @@ export async function getReplyFromAssistant(messagesArray) {
     console.log('🧠 Создаём новый thread...')
     const res1 = await fetch('https://api.openai.com/v1/threads', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      }
     })
-    const { id: threadId } = await res1.json()
+    const res1Json = await res1.json()
+    console.log('📄 Ответ от /threads:', res1Json)
+
+    const threadId = res1Json.id
     console.log('📌 Thread ID:', threadId)
 
     console.log('📤 Отправляем сообщение в thread...')
@@ -89,6 +96,7 @@ export async function getReplyFromAssistant(messagesArray) {
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ assistant_id: assistantId })
     }).then(r => r.json())
+    console.log('📄 Ответ от /runs:', run)
     console.log('▶️ Run ID:', run.id)
 
     // Ожидаем завершения run

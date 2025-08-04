@@ -64,45 +64,59 @@ export async function getReplyFromAssistant(messagesArray) {
   const assistantId = process.env.REPLY_ASSISTANT_ID
   const apiKey = process.env.OPENAI_API_KEY
 
-  const res1 = await fetch('https://api.openai.com/v1/threads', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
-  })
-  const { id: threadId } = await res1.json()
-
-  await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      role: 'user',
-      content: messagesArray.join('\n')
+  try {
+    console.log('🧠 Создаём новый thread...')
+    const res1 = await fetch('https://api.openai.com/v1/threads', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
     })
-  })
+    const { id: threadId } = await res1.json()
+    console.log('📌 Thread ID:', threadId)
 
-  const run = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ assistant_id: assistantId })
-  }).then(r => r.json())
+    console.log('📤 Отправляем сообщение в thread...')
+    await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'user',
+        content: messagesArray.join('\n')
+      })
+    })
 
-  // Ждём завершения run
-  let status = 'queued'
-  while (status !== 'completed' && status !== 'failed') {
-    await new Promise(r => setTimeout(r, 1500))
-    const runStatus = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
+    console.log('⚙️ Запускаем ассистента...')
+    const run = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assistant_id: assistantId })
+    }).then(r => r.json())
+    console.log('▶️ Run ID:', run.id)
+
+    // Ожидаем завершения run
+    let status = 'queued'
+    while (status !== 'completed' && status !== 'failed') {
+      await new Promise(r => setTimeout(r, 1500))
+      const runStatus = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
+        headers: { Authorization: `Bearer ${apiKey}` }
+      }).then(r => r.json())
+      status = runStatus.status
+      console.log('⏳ Статус выполнения:', status)
+    }
+
+    console.log('📩 Получаем ответы...')
+    const messages = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
       headers: { Authorization: `Bearer ${apiKey}` }
     }).then(r => r.json())
-    status = runStatus.status
+
+    const assistantMessage = messages.data.find(m => m.role === 'assistant')
+    if (!assistantMessage || !assistantMessage.content?.[0]?.text?.value) {
+      console.log('⚠️ Не удалось найти сообщение от ассистента. Все сообщения:', messages)
+      return 'Извини, я пока не могу ответить на это сообщение.'
+    }
+
+    console.log('✅ Получен ответ от ассистента:', assistantMessage.content[0].text.value)
+    return assistantMessage.content[0].text.value
+  } catch (error) {
+    console.error('❌ Ошибка в getReplyFromAssistant:', error)
+    return 'Произошла ошибка при получении ответа от ассистента.'
   }
-
-  const messages = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-    headers: { Authorization: `Bearer ${apiKey}` }
-  }).then(r => r.json())
-
-  const assistantMessage = messages.data.find(m => m.role === 'assistant')
-if (!assistantMessage || !assistantMessage.content?.[0]?.text?.value) {
-  console.log('⚠️ Не удалось получить ответ от Assistant. Полные данные:', messages)
-  return 'Извини, я пока не могу ответить на это сообщение.'
-}
-return assistantMessage.content[0].text.value
 }

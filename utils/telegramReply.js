@@ -2,6 +2,8 @@ import { sendMessageToTelegram } from './telegram.js'
 import { getReplyFromAssistant } from './openai.js'
 
 export async function handleTelegramUpdate(update) {
+  console.log('🔍 Полный апдейт:', JSON.stringify(update, null, 2))
+  
   if (!update.message || !update.message.text) return
 
   const msg = update.message

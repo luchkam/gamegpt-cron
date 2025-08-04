@@ -25,11 +25,18 @@ export async function handleTelegramUpdate(update) {
     console.log('🧾 chat_id:', msg.chat.id)
     console.log('🧾 message_id:', msg.message_id)
     console.log('🧾 message_thread_id:', msg.message_thread_id)
-    await sendMessageToTelegram({
+    const payload = {
       chat_id: msg.chat.id,
-      text: reply,
-      message_thread_id: msg.message_thread_id,
-      reply_to_message_id: msg.message_id
-    })
+      text: reply
+    }
+
+    if (msg.message_thread_id) {
+      payload.message_thread_id = msg.message_thread_id
+      payload.reply_to_message_id = msg.message_id
+    } else {
+      console.warn('⚠️ Нет message_thread_id — удаляем reply_to_message_id, чтобы не получить 404')
+    }
+
+    await sendMessageToTelegram(payload)
   }
 }

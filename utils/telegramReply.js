@@ -34,7 +34,7 @@ export async function handleTelegramUpdate(update) {
       payload.message_thread_id = msg.message_thread_id
       payload.reply_to_message_id = msg.message_id
     } else {
-      console.warn('⚠️ Нет message_thread_id — удаляем reply_to_message_id, чтобы не получить 404')
+      console.warn('⚠️ Нет message_thread_id — reply_to_message_id не добавляется')
     }
 
     await sendMessageToTelegram(payload)

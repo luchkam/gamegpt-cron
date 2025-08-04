@@ -22,11 +22,13 @@ export async function handleTelegramUpdate(update) {
     console.log('🤖 Ответ от Assistant:', reply)
 
     // Отправляем ответ в тот же чат и с reply
-    console.log('📤 Отправка в Telegram — chat_id:', msg.chat.id, 'reply_to_message_id:', msg.message_id)
+    console.log('🧾 chat_id:', msg.chat.id)
+    console.log('🧾 message_id:', msg.message_id)
+    console.log('🧾 message_thread_id:', msg.message_thread_id)
     await sendMessageToTelegram({
       chat_id: msg.chat.id,
       text: reply,
-      message_thread_id: msg.message_thread_id || undefined,
+      message_thread_id: msg.message_thread_id,
       reply_to_message_id: msg.message_id
     })
   }

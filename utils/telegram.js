@@ -1,18 +1,23 @@
 import axios from 'axios'
 
-export async function sendMessageToTelegram(text, chatId, replyToMessageId = null) {
-  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`
-
+export async function sendMessageToTelegram({ chat_id, text, reply_to_message_id }) {
   const payload = {
-    chat_id: chatId,
-    text: text,
+    chat_id,
+    text,
     parse_mode: 'HTML'
   }
 
-  if (replyToMessageId) {
-    payload.reply_to_message_id = replyToMessageId
+  if (reply_to_message_id) {
+    payload.reply_to_message_id = reply_to_message_id
   }
 
-  const res = await axios.post(url, payload)
-  return res.data
+  try {
+    const res = await axios.post(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      payload
+    )
+    return res.data
+  } catch (error) {
+    console.error('❌ Ошибка при отправке в Telegram:', error.response?.data || error.message)
+  }
 }

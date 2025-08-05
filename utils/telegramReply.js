@@ -31,14 +31,8 @@ export async function handleTelegramUpdate(update) {
     console.log('🧾 message_thread_id:', msg.message_thread_id)
     const payload = {
       chat_id: msg.chat.id,
-      text: reply
-    }
-
-    if (msg.message_thread_id) {
-      payload.message_thread_id = msg.message_thread_id
-      payload.reply_to_message_id = msg.message_id
-    } else {
-      console.warn('⚠️ Нет message_thread_id — reply_to_message_id не добавляется')
+      text: reply,
+      reply_to_message_id: msg.message_id
     }
 
     await sendMessageToTelegram(payload)

@@ -36,6 +36,13 @@ export async function handleVKCallback(data) {
     // Условия:
     const isReplyToAssistant = replyToUser && replyToUser === -GROUP_ID
     const isCommentOnPostByAssistant = !replyToComment && isPostFromCommunity
+    console.log('🔍 Проверка условий:')
+    console.log('post.from_id =', post?.from_id)
+    console.log('isPostFromCommunity =', isPostFromCommunity)
+    console.log('replyToUser =', replyToUser)
+    console.log('replyToComment =', replyToComment)
+    console.log('isReplyToAssistant =', isReplyToAssistant)
+    console.log('isCommentOnPostByAssistant =', isCommentOnPostByAssistant)
 
     if (isReplyToAssistant || isCommentOnPostByAssistant) {
       const reply = await getReplyFromAssistant([text])

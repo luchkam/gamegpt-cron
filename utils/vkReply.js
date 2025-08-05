@@ -63,6 +63,28 @@ export async function handleVKCallback(data) {
 
     if (fromId === -GROUP_ID || !text) return
 
+    // Проверяем: уже есть ответ от ассистента на этот комментарий?
+    const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
+      params: {
+        owner_id: ownerId,
+        post_id: postId,
+        comment_id: comment.id, // важно!
+        access_token: ACCESS_TOKEN,
+        v: '5.199',
+        thread_items_count: 10 // можно 1, но 10 надёжнее
+      }
+    })
+
+    const replies = commentsCheck.data?.response?.items || []
+    const alreadyReplied = replies.some(c => c.from_id === -GROUP_ID)
+
+    console.log('🔁 Проверка на дублирование:', alreadyReplied)
+
+    if (alreadyReplied) {
+      console.log('⏭ Ответ уже был — не дублируем')
+      return
+    }
+
     const reply = await getReplyFromAssistant([text])
 
     await axios.get('https://api.vk.com/method/wall.createComment', {

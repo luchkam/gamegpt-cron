@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { getReplyFromAssistant } from './openai.js'
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const REPLIED_IDS_FILE = path.resolve(__dirname, 'replied.json');
 let repliedIds = [];

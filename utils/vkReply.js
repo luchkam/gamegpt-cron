@@ -19,31 +19,15 @@ export async function handleVKCallback(data) {
     const replyToUser = comment.reply_to_user
     const text = comment.text?.trim()
 
-    if (fromId < 0 || !text) return // от сообщества или пустой
+    // От сообщества или пустой комментарий — игнор
+    if (fromId < 0 || !text) return
 
-    let postAuthorId = null
-
-    try {
-      const postRes = await axios.get('https://api.vk.com/method/wall.getById', {
-        params: {
-          posts: `${ownerId}_${postId}`,
-          access_token: ACCESS_TOKEN,
-          v: '5.199'
-        }
-      })
-
-      console.log('🧱 wall.getById ответ:', JSON.stringify(postRes.data, null, 2))
-
-      postAuthorId = postRes.data?.response?.[0]?.from_id
-    } catch (err) {
-      console.error('❌ Ошибка при получении wall.getById:', err.message)
-    }
-
-    const isPostFromCommunity = postAuthorId === -GROUP_ID
+    // Прямая проверка: пост принадлежит сообществу
+    const isPostFromCommunity = ownerId === -GROUP_ID
     const isReplyToAssistant = replyToUser === -GROUP_ID
 
     console.log('🔍 Проверка условий:')
-    console.log('postAuthorId =', postAuthorId)
+    console.log('ownerId =', ownerId)
     console.log('isPostFromCommunity =', isPostFromCommunity)
     console.log('replyToUser =', replyToUser)
     console.log('isReplyToAssistant =', isReplyToAssistant)

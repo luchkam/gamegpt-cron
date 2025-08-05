@@ -34,7 +34,9 @@ export async function handleTelegramUpdate(update) {
       text: reply,
       reply_to_message_id: msg.message_id
     }
+    console.log('📨 Готовим payload для Telegram:', payload)
 
     await sendMessageToTelegram(payload)
+    console.log('✅ Отправлено в Telegram')
   }
 }

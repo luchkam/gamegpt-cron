@@ -20,7 +20,7 @@ export async function handleVKCallback(data) {
     const text = comment.text?.trim()
 
     // От сообщества или пустой комментарий — игнор
-    if (fromId < 0 || !text) return
+    if (fromId === -GROUP_ID || !text) return
 
     // Прямая проверка: пост принадлежит сообществу
     const isPostFromCommunity = ownerId === -GROUP_ID

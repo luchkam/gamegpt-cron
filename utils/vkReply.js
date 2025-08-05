@@ -6,45 +6,49 @@ const GROUP_ID = parseInt(process.env.VK_GROUP_ID)
 
 export async function handleVKCallback(data) {
   console.log('📩 VK Callback получен:', JSON.stringify(data, null, 2))
+
   const type = data.type
 
   if (type === 'wall_reply_new') {
     console.log('💬 Обнаружен комментарий на стене (wall_reply_new)')
+
     const comment = data.object
     const fromId = comment.from_id
     const postId = comment.post_id
     const ownerId = comment.owner_id
-    const replyToComment = comment.reply_to_comment
     const replyToUser = comment.reply_to_user
     const text = comment.text?.trim()
 
-    // Игнорируем: комментарий от самого сообщества или пустой
-    if (fromId < 0 || !text) return
+    if (fromId < 0 || !text) return // от сообщества или пустой
 
-    // Получаем информацию о посте, чтобы понять, от кого он
-    const postRes = await axios.get('https://api.vk.com/method/wall.getById', {
-      params: {
-        posts: `${ownerId}_${postId}`,
-        access_token: ACCESS_TOKEN,
-        v: '5.199'
-      }
-    })
+    let postAuthorId = null
 
-    const post = postRes.data.response?.[0]
-    const isPostFromCommunity = post?.from_id === -GROUP_ID
+    try {
+      const postRes = await axios.get('https://api.vk.com/method/wall.getById', {
+        params: {
+          posts: `${ownerId}_${postId}`,
+          access_token: ACCESS_TOKEN,
+          v: '5.199'
+        }
+      })
 
-    // Условия:
-    const isReplyToAssistant = replyToUser && replyToUser === -GROUP_ID
-    const isCommentOnPostByAssistant = !replyToComment && isPostFromCommunity
+      console.log('🧱 wall.getById ответ:', JSON.stringify(postRes.data, null, 2))
+
+      postAuthorId = postRes.data?.response?.[0]?.from_id
+    } catch (err) {
+      console.error('❌ Ошибка при получении wall.getById:', err.message)
+    }
+
+    const isPostFromCommunity = postAuthorId === -GROUP_ID
+    const isReplyToAssistant = replyToUser === -GROUP_ID
+
     console.log('🔍 Проверка условий:')
-    console.log('post.from_id =', post?.from_id)
+    console.log('postAuthorId =', postAuthorId)
     console.log('isPostFromCommunity =', isPostFromCommunity)
     console.log('replyToUser =', replyToUser)
-    console.log('replyToComment =', replyToComment)
     console.log('isReplyToAssistant =', isReplyToAssistant)
-    console.log('isCommentOnPostByAssistant =', isCommentOnPostByAssistant)
 
-    if (isReplyToAssistant || isCommentOnPostByAssistant) {
+    if (isPostFromCommunity || isReplyToAssistant) {
       const reply = await getReplyFromAssistant([text])
 
       await axios.get('https://api.vk.com/method/wall.createComment', {
@@ -53,23 +57,27 @@ export async function handleVKCallback(data) {
           post_id: postId,
           message: reply,
           from_group: 1,
-          reply_to_comment: comment.id, // отвечаем на этот комментарий
+          reply_to_comment: comment.id,
           access_token: ACCESS_TOKEN,
           v: '5.199'
         }
       })
+
+      console.log('✅ Ответ отправлен ассистентом в комментарии')
+    } else {
+      console.log('⏭ Комментарий проигнорирован (не к посту бота и не ответ ассистенту)')
     }
   }
 
-  // Реакция на новые посты от пользователей (не от сообщества)
   if (type === 'wall_post_new') {
     console.log('📝 Обнаружен новый пост на стене (wall_post_new)')
+
     const post = data.object
     const fromId = post.from_id
     const postId = post.id
     const text = post.text?.trim()
 
-    if (fromId === -GROUP_ID || !text) return // если это пост от сообщества — пропускаем
+    if (fromId === -GROUP_ID || !text) return
 
     const reply = await getReplyFromAssistant([text])
 
@@ -83,5 +91,7 @@ export async function handleVKCallback(data) {
         v: '5.199'
       }
     })
+
+    console.log('✅ Ассистент ответил на новый пост пользователя')
   }
 }

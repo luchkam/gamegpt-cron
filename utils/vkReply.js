@@ -85,6 +85,12 @@ export async function handleVKCallback(data) {
       return
     }
 
+    // Прерываем, если это комментарий от бота
+    if (comment.from_id === -GROUP_ID) {
+      console.log('⏭ Это комментарий от бота — пропускаем')
+      return
+    }
+
     const reply = await getReplyFromAssistant([text])
 
     await axios.get('https://api.vk.com/method/wall.createComment', {

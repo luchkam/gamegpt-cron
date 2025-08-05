@@ -26,6 +26,28 @@ export async function handleVKCallback(data) {
     const isPostFromCommunity = ownerId === -GROUP_ID
     const isReplyToAssistant = replyToUser === -GROUP_ID
 
+    // Проверяем: уже есть ответ от ассистента на этот комментарий?
+    const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
+      params: {
+        owner_id: ownerId,
+        post_id: postId,
+        comment_id: comment.id,
+        access_token: ACCESS_TOKEN,
+        v: '5.199',
+        thread_items_count: 10
+      }
+    })
+
+    const replies = commentsCheck.data?.response?.items || []
+    const alreadyReplied = replies.some(c => c.from_id === -GROUP_ID)
+
+    console.log('🔁 Проверка на дублирование:', alreadyReplied)
+
+    if (alreadyReplied) {
+      console.log('⏭ Ответ уже был — не дублируем')
+      return
+    }
+
     console.log('🔍 Проверка условий:')
     console.log('ownerId =', ownerId)
     console.log('isPostFromCommunity =', isPostFromCommunity)

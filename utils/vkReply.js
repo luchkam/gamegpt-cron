@@ -5,9 +5,11 @@ const ACCESS_TOKEN = process.env.VK_ACCESS_TOKEN
 const GROUP_ID = parseInt(process.env.VK_GROUP_ID)
 
 export async function handleVKCallback(data) {
+  console.log('📩 VK Callback получен:', JSON.stringify(data, null, 2))
   const type = data.type
 
   if (type === 'wall_reply_new') {
+    console.log('💬 Обнаружен комментарий на стене (wall_reply_new)')
     const comment = data.object
     const fromId = comment.from_id
     const postId = comment.post_id
@@ -54,6 +56,7 @@ export async function handleVKCallback(data) {
 
   // Реакция на новые посты от пользователей (не от сообщества)
   if (type === 'wall_post_new') {
+    console.log('📝 Обнаружен новый пост на стене (wall_post_new)')
     const post = data.object
     const fromId = post.from_id
     const postId = post.id

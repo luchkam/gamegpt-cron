@@ -1,17 +1,23 @@
+// ESM-совместимая версия vkReply.js
+
 import axios from 'axios'
 import { getReplyFromAssistant } from './openai.js'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 
-import fs from 'fs';
-import path from 'path';
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
-const REPLIED_IDS_FILE = path.resolve(__dirname, 'replied.json');
-let repliedIds = [];
+const REPLIED_IDS_FILE = path.resolve(__dirname, 'replied.json')
+let repliedIds = []
 
 if (fs.existsSync(REPLIED_IDS_FILE)) {
   try {
-    repliedIds = JSON.parse(fs.readFileSync(REPLIED_IDS_FILE, 'utf-8'));
+    repliedIds = JSON.parse(fs.readFileSync(REPLIED_IDS_FILE, 'utf-8'))
   } catch (e) {
-    console.error('❌ Ошибка чтения replied.json', e);
+    console.error('❌ Ошибка чтения replied.json', e)
   }
 }
 
@@ -33,14 +39,11 @@ export async function handleVKCallback(data) {
     const replyToUser = comment.reply_to_user
     const text = comment.text?.trim()
 
-    // От сообщества или пустой комментарий — игнор
     if (fromId === -GROUP_ID || !text) return
 
-    // Прямая проверка: пост принадлежит сообществу
     const isPostFromCommunity = ownerId === -GROUP_ID
     const isReplyToAssistant = replyToUser === -GROUP_ID
 
-    // Проверяем: уже есть ответ от ассистента на этот комментарий?
     const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
       params: {
         owner_id: ownerId,
@@ -54,9 +57,10 @@ export async function handleVKCallback(data) {
 
     const replies = commentsCheck.data?.response?.items || []
     const alreadyReplied = replies.some(c => c.from_id === -GROUP_ID)
+
     if (repliedIds.includes(comment.id)) {
-      console.log('⏭ Уже отвечали на этот comment_id ранее — пропускаем');
-      return;
+      console.log('⏭ Уже отвечали на этот comment_id ранее — пропускаем')
+      return
     }
 
     console.log('🔁 Проверка на дублирование:', alreadyReplied)
@@ -88,15 +92,16 @@ export async function handleVKCallback(data) {
       })
 
       console.log('✅ Ответ отправлен ассистентом в комментарии')
-      repliedIds.push(comment.id);
+
+      repliedIds.push(comment.id)
 
       fs.writeFile(REPLIED_IDS_FILE, JSON.stringify(repliedIds), (err) => {
         if (err) {
-          console.error('❌ Ошибка записи replied.json', err);
+          console.error('❌ Ошибка записи replied.json', err)
         } else {
-          console.log('💾 Записали comment_id в replied.json');
+          console.log('💾 Записали comment_id в replied.json')
         }
-      });
+      })
     } else {
       console.log('⏭ Комментарий проигнорирован (не к посту бота и не ответ ассистенту)')
     }
@@ -108,19 +113,18 @@ export async function handleVKCallback(data) {
     const post = data.object
     const fromId = post.from_id
     const postId = post.id
+    const ownerId = post.owner_id
     const text = post.text?.trim()
 
     if (fromId === -GROUP_ID || !text) return
 
-    // Проверяем: уже есть ответ от ассистента на этот комментарий?
     const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
       params: {
         owner_id: ownerId,
         post_id: postId,
-        comment_id: comment.id, // важно!
         access_token: ACCESS_TOKEN,
         v: '5.199',
-        thread_items_count: 10 // можно 1, но 10 надёжнее
+        thread_items_count: 10
       }
     })
 
@@ -131,12 +135,6 @@ export async function handleVKCallback(data) {
 
     if (alreadyReplied) {
       console.log('⏭ Ответ уже был — не дублируем')
-      return
-    }
-
-    // Прерываем, если это комментарий от бота
-    if (comment.from_id === -GROUP_ID) {
-      console.log('⏭ Это комментарий от бота — пропускаем')
       return
     }
 

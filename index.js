@@ -12,10 +12,9 @@ const run = async () => {
     const post = await getPostFromAssistant(time)
     console.log('🧠 Generated post:', post)
 
-    const resultTelegram = await sendMessageToTelegram({
-      chat_id: process.env.CHAT_ID,
-      text: post
-    })
+    console.log('📦 chat_id =', process.env.CHAT_ID)
+    const resultTelegram = await sendMessageToTelegram(post)
+    
     console.log('✅ Sent to Telegram:', resultTelegram)
 
     const resultVK = await postToVK(post) // 👉 добавляем отправку в VK

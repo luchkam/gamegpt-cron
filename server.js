@@ -37,8 +37,6 @@ app.post('/vk-callback', async (req, res) => {
 
 const PORT = process.env.PORT || 3000
 
-import { savePost } from './utils/postCache.js'
-
 app.post('/store-post', (req, res) => {
   const { id, text } = req.body
 

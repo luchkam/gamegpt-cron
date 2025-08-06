@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { savePost } from './postCache.js'
 
 export async function postToVK(message) {
   const token = process.env.VK_ACCESS_TOKEN

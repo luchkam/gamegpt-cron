@@ -13,16 +13,19 @@ fs.access(FILE_PATH, fs.constants.R_OK | fs.constants.W_OK, (err) => {
 // Получаем текущие посты из файла
 function getPosts() {
   try {
-    if (fs.existsSync(FILE_PATH)) {
-      const raw = fs.readFileSync(FILE_PATH, 'utf-8')
-      const parsed = JSON.parse(raw)
-      console.log('📚 Загружены посты из posts.json:', parsed)
-      return parsed
+    if (!fs.existsSync(FILE_PATH)) {
+      console.warn('📄 posts.json не найден, создаём пустой...')
+      fs.writeFileSync(FILE_PATH, '{}', 'utf-8')
     }
+
+    const raw = fs.readFileSync(FILE_PATH, 'utf-8')
+    const parsed = JSON.parse(raw)
+    console.log('📚 Загружены посты из posts.json:', parsed)
+    return parsed
   } catch (e) {
-    console.error('❌ Ошибка чтения posts.json:', e)
+    console.error('❌ Ошибка чтения или создания posts.json:', e)
+    return {}
   }
-  return {}
 }
 
 // Сохраняем новый пост

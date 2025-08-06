@@ -88,6 +88,7 @@ export async function getReplyFromAssistant(messagesArray) {
         'Content-Type': 'application/json',
         'OpenAI-Beta': 'assistants=v2'
       },
+      console.log('📨 Отправляем ассистенту такой prompt:', `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${messagesArray[1] ?? ''}`)
       body: JSON.stringify({
         role: 'user',
         content: `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${messagesArray[1] ?? ''}`

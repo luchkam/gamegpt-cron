@@ -10,6 +10,8 @@ const VK_USER_ACCESS_TOKEN = process.env.VK_USER_ACCESS_TOKEN
 // Получение текста оригинального поста по его ID
 async function getOriginalPostText(postId) {
   const postFullId = `-${GROUP_ID}_${postId}`
+  console.log('🪪 Получаем оригинальный пост по postId =', postId)
+  console.log('🪪 postFullId =', postFullId)
   try {
     const res = await axios.get('https://api.vk.com/method/wall.getById', {
       params: {
@@ -18,6 +20,7 @@ async function getOriginalPostText(postId) {
         v: '5.199',
       },
     })
+    console.log('📦 VK ответ на wall.getById:', res.data)
     const text = res.data?.response?.[0]?.text || ''
     console.log('📝 Получен оригинальный текст поста из VK:', text)
     return text

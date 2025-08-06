@@ -32,6 +32,7 @@ export async function postToVK(message) {
 
     // Сохраняем текст поста в локальный файл для последующего использования в ответах
     if (res.data?.response?.post_id && message) {
+      console.log('📥 Сохраняем пост:', res.data.response.post_id, message)
       savePost(res.data.response.post_id, message)
     }
 

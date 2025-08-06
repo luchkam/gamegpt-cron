@@ -65,36 +65,38 @@ export async function getReplyFromAssistant(messagesArray) {
   const apiKey = process.env.OPENAI_API_KEY
 
   try {
-    console.log('🧠 Создаём новый thread...')
-    const res1 = await fetch('https://api.openai.com/v1/threads', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      }
-    })
-    const res1Json = await res1.json()
-    console.log('📄 Ответ от /threads:', res1Json)
+  console.log('🧠 Создаём новый thread...')
+  const res1 = await fetch('https://api.openai.com/v1/threads', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2'
+    }
+  })
+  const res1Json = await res1.json()
+  console.log('📄 Ответ от /threads:', res1Json)
 
-    const threadId = res1Json.id
-    console.log('📌 Thread ID:', threadId)
+  const threadId = res1Json.id
+  console.log('📌 Thread ID:', threadId)
 
-    console.log('📤 Отправляем сообщение в thread...')
-    await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'OpenAI-Beta': 'assistants=v2'
-      },
-      const commentText = messagesArray[1] ? messagesArray[1] : ''
-      console.log('📨 Отправляем ассистенту такой prompt:', `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`)
-      body: JSON.stringify({
-        role: 'user',
-        content: `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${messagesArray[1] ?? ''}`
-      })
+  // ✅ Вставляем лог до запроса
+  const commentText = messagesArray.length > 1 ? messagesArray[1] : ''
+  console.log('📨 Отправляем ассистенту такой prompt:', `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`)
+
+  console.log('📤 Отправляем сообщение в thread...')
+  await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2'
+    },
+    body: JSON.stringify({
+      role: 'user',
+      content: `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`
     })
+  })
 
     console.log('⚙️ Запускаем ассистента...')
     const run = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {

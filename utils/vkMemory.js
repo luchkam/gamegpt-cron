@@ -1,35 +1,38 @@
 import fs from 'fs'
 import path from 'path'
 
-// На Render можно писать только в /tmp — иначе writeFileSync может не работать
-const FILE_PATH = path.resolve('/tmp/posts.json')
+const FILE_PATH = '/tmp/posts.json'
 
-// Глобальная переменная, чтобы не терять загруженные посты
-let posts = {}
-
-try {
-  if (fs.existsSync(FILE_PATH)) {
-    const raw = fs.readFileSync(FILE_PATH, 'utf-8')
-    posts = JSON.parse(raw)
-    console.log('📚 Загружены посты из posts.json')
-  } else {
-    console.log('📁 posts.json ещё не существует — будет создан при первом посте')
+// Получаем текущие посты из файла
+function getPosts() {
+  try {
+    if (fs.existsSync(FILE_PATH)) {
+      const raw = fs.readFileSync(FILE_PATH, 'utf-8')
+      const parsed = JSON.parse(raw)
+      console.log('📚 Загружены посты из posts.json:', parsed)
+      return parsed
+    }
+  } catch (e) {
+    console.error('❌ Ошибка чтения posts.json:', e)
   }
-} catch (e) {
-  console.error('❌ Ошибка чтения posts.json:', e)
+  return {}
 }
 
+// Сохраняем новый пост
 export function savePost(postId, text) {
+  const posts = getPosts()
   posts[postId] = text
 
   try {
     fs.writeFileSync(FILE_PATH, JSON.stringify(posts, null, 2), 'utf-8')
-    console.log(`💾 Пост ${postId} сохранён в posts.json`)
+    console.log(`✅ Пост ${postId} сохранён в /tmp/posts.json`)
   } catch (err) {
     console.error('❌ Ошибка записи posts.json:', err)
   }
 }
 
+// Получаем текст по postId
 export function getPostText(postId) {
+  const posts = getPosts()
   return posts[postId] || ''
 }

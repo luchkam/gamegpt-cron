@@ -87,6 +87,7 @@ export async function handleVKCallback(data) {
 
     if (fromId === -GROUP_ID || !text) return
 
+    console.log('🖊 Сохраняем пост:', postId, '→', text)
     savePost(postId, text)
     console.log('💾 Пост сохранён локально:', postId)
   }

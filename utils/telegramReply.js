@@ -22,8 +22,8 @@ export async function handleTelegramUpdate(update) {
 
     let context = []
 
-    if (isReplyToBot && msg.reply_to_message?.text) {
-      context.push(msg.reply_to_message.text) // оригинальный пост
+    if (msg.reply_to_message?.text) {
+      context.push(msg.reply_to_message.text) // оригинальный пост — всегда, если есть
     }
 
     context.push(cleanedText) // сообщение пользователя

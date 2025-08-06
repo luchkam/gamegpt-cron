@@ -27,6 +27,7 @@ app.post('/vk-callback', async (req, res) => {
   }
 
   try {
+    console.log('🆔 VK PID:', process.pid)
     await handleVKCallback(req.body)
     res.send('ok') // VK требует ровно 'ok'
   } catch (err) {

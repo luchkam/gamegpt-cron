@@ -29,6 +29,12 @@ export async function postToVK(message) {
       console.log('✅ Пост опубликован в VK:', res.data.response.post_id)
     }
 
+    import { savePost } from './postCache.js'
+    // Сохраняем текст поста в локальный файл для последующего использования в ответах
+    if (res.data?.response?.post_id && message) {
+      savePost(res.data.response.post_id, message)
+    }
+
     return res.data
   } catch (err) {
     console.error('❌ Ошибка при отправке в VK:', err.message)

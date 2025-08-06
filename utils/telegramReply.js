@@ -20,7 +20,13 @@ export async function handleTelegramUpdate(update) {
     // Убираем @gamegpt_poster_bot из текста
     const cleanedText = msg.text.replace(new RegExp(`@${botUsername}`, 'gi'), '').trim()
 
-    const context = [cleanedText]
+    let context = []
+
+    if (isReplyToBot && msg.reply_to_message?.text) {
+      context.push(msg.reply_to_message.text) // оригинальный пост
+    }
+
+    context.push(cleanedText) // сообщение пользователя
     console.log('📥 Контекст сообщения:', context)
     const reply = await getReplyFromAssistant(context)
     console.log('🤖 Ответ от Assistant:', reply)

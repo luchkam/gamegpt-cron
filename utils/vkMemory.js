@@ -34,5 +34,7 @@ export function savePost(postId, text) {
 // Получаем текст по postId
 export function getPostText(postId) {
   const posts = getPosts()
-  return posts[postId] || ''
+  const text = posts[postId]
+  console.log('📥 Получен текст поста для id', postId, ':', text) // ← эту строку ВСТАВЛЯЕШЬ СЮДА
+  return text || ''
 }

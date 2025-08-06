@@ -77,7 +77,18 @@ export async function handleVKCallback(data) {
     console.log('isReplyToAssistant =', isReplyToAssistant)
 
     if (isPostFromCommunity || isReplyToAssistant) {
-      const reply = await getReplyFromAssistant([text])
+      // Получаем сам пост по ID
+      const postResponse = await axios.get('https://api.vk.com/method/wall.getById', {
+        params: {
+          posts: `${ownerId}_${postId}`,
+          access_token: ACCESS_TOKEN,
+          v: '5.199'
+        }
+      })
+
+      const originalPostText = postResponse.data?.response?.[0]?.text || ''
+      const context = originalPostText ? [originalPostText, text] : [text]
+      const reply = await getReplyFromAssistant(context)
 
       await axios.get('https://api.vk.com/method/wall.createComment', {
         params: {

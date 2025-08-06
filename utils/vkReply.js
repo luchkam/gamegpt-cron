@@ -1,29 +1,31 @@
-// ESM-совместимая версия vkReply.js
+// ESM-совместимая версия vkReply.js без записи в файл
 
 import axios from 'axios'
 import { getReplyFromAssistant } from './openai.js'
-import fs from 'fs'
-import { getPost } from './postCache.js'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const REPLIED_IDS_FILE = path.resolve(__dirname, 'replied.json')
-let repliedIds = []
-
-if (fs.existsSync(REPLIED_IDS_FILE)) {
-  try {
-    repliedIds = JSON.parse(fs.readFileSync(REPLIED_IDS_FILE, 'utf-8'))
-  } catch (e) {
-    console.error('❌ Ошибка чтения replied.json', e)
-  }
-}
 
 const ACCESS_TOKEN = process.env.VK_ACCESS_TOKEN
 const GROUP_ID = parseInt(process.env.VK_GROUP_ID)
+const VK_USER_ACCESS_TOKEN = process.env.VK_USER_ACCESS_TOKEN
+
+// Получение текста оригинального поста по его ID
+async function getOriginalPostText(postId) {
+  const postFullId = `-${GROUP_ID}_${postId}`
+  try {
+    const res = await axios.get('https://api.vk.com/method/wall.getById', {
+      params: {
+        posts: postFullId,
+        access_token: VK_USER_ACCESS_TOKEN,
+        v: '5.199',
+      },
+    })
+    const text = res.data?.response?.[0]?.text || ''
+    console.log('📝 Получен оригинальный текст поста из VK:', text)
+    return text
+  } catch (err) {
+    console.error('❌ Ошибка при получении текста поста из VK:', err.response?.data || err.message)
+    return ''
+  }
+}
 
 export async function handleVKCallback(data) {
   console.log('📩 VK Callback получен:', JSON.stringify(data, null, 2))
@@ -52,20 +54,14 @@ export async function handleVKCallback(data) {
         comment_id: comment.id,
         access_token: ACCESS_TOKEN,
         v: '5.199',
-        thread_items_count: 10
-      }
+        thread_items_count: 10,
+      },
     })
 
     const replies = commentsCheck.data?.response?.items || []
-    const alreadyReplied = replies.some(c => c.from_id === -GROUP_ID)
-
-    if (repliedIds.includes(comment.id)) {
-      console.log('⏭ Уже отвечали на этот comment_id ранее — пропускаем')
-      return
-    }
+    const alreadyReplied = replies.some((c) => c.from_id === -GROUP_ID)
 
     console.log('🔁 Проверка на дублирование:', alreadyReplied)
-
     if (alreadyReplied) {
       console.log('⏭ Ответ уже был — не дублируем')
       return
@@ -78,9 +74,10 @@ export async function handleVKCallback(data) {
     console.log('isReplyToAssistant =', isReplyToAssistant)
 
     if (isPostFromCommunity || isReplyToAssistant) {
-      const originalPostText = getPost(postId)
+      const originalPostText = await getOriginalPostText(postId)
       const context = originalPostText ? [originalPostText, text] : [text]
       console.log('🧠 Контекст для Assistant:', context)
+
       const reply = await getReplyFromAssistant(context)
 
       await axios.get('https://api.vk.com/method/wall.createComment', {
@@ -91,21 +88,11 @@ export async function handleVKCallback(data) {
           from_group: 1,
           reply_to_comment: comment.id,
           access_token: ACCESS_TOKEN,
-          v: '5.199'
-        }
+          v: '5.199',
+        },
       })
 
-      console.log('✅ Ответ отправлен ассистентом в комментарии')
-
-      repliedIds.push(comment.id)
-
-      fs.writeFile(REPLIED_IDS_FILE, JSON.stringify(repliedIds), (err) => {
-        if (err) {
-          console.error('❌ Ошибка записи replied.json', err)
-        } else {
-          console.log('💾 Записали comment_id в replied.json')
-        }
-      })
+      console.log('✅ Ответ ассистента отправлен в комментарии')
     } else {
       console.log('⏭ Комментарий проигнорирован (не к посту бота и не ответ ассистенту)')
     }
@@ -128,15 +115,14 @@ export async function handleVKCallback(data) {
         post_id: postId,
         access_token: ACCESS_TOKEN,
         v: '5.199',
-        thread_items_count: 10
-      }
+        thread_items_count: 10,
+      },
     })
 
     const replies = commentsCheck.data?.response?.items || []
-    const alreadyReplied = replies.some(c => c.from_id === -GROUP_ID)
+    const alreadyReplied = replies.some((c) => c.from_id === -GROUP_ID)
 
     console.log('🔁 Проверка на дублирование:', alreadyReplied)
-
     if (alreadyReplied) {
       console.log('⏭ Ответ уже был — не дублируем')
       return
@@ -151,8 +137,8 @@ export async function handleVKCallback(data) {
         message: reply,
         from_group: 1,
         access_token: ACCESS_TOKEN,
-        v: '5.199'
-      }
+        v: '5.199',
+      },
     })
 
     console.log('✅ Ассистент ответил на новый пост пользователя')

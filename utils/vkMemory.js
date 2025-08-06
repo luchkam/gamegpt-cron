@@ -2,6 +2,18 @@ import fs from 'fs'
 import path from 'path'
 
 const FILE_PATH = '/tmp/posts.json'
+
+// Проверяем: если файла нет — создаём пустой JSON
+if (!fs.existsSync(FILE_PATH)) {
+  try {
+    fs.writeFileSync(FILE_PATH, '{}', 'utf-8')
+    console.log('🆕 posts.json создан в /tmp')
+  } catch (err) {
+    console.error('❌ Не удалось создать posts.json:', err)
+  }
+}
+
+// Проверка прав на чтение/запись
 fs.access(FILE_PATH, fs.constants.R_OK | fs.constants.W_OK, (err) => {
   if (err) {
     console.error('🚫 Нет доступа к posts.json:', err)
@@ -13,17 +25,12 @@ fs.access(FILE_PATH, fs.constants.R_OK | fs.constants.W_OK, (err) => {
 // Получаем текущие посты из файла
 function getPosts() {
   try {
-    if (!fs.existsSync(FILE_PATH)) {
-      console.warn('📄 posts.json не найден, создаём пустой...')
-      fs.writeFileSync(FILE_PATH, '{}', 'utf-8')
-    }
-
     const raw = fs.readFileSync(FILE_PATH, 'utf-8')
     const parsed = JSON.parse(raw)
     console.log('📚 Загружены посты из posts.json:', parsed)
     return parsed
   } catch (e) {
-    console.error('❌ Ошибка чтения или создания posts.json:', e)
+    console.error('❌ Ошибка чтения posts.json:', e)
     return {}
   }
 }
@@ -45,6 +52,6 @@ export function savePost(postId, text) {
 export function getPostText(postId) {
   const posts = getPosts()
   const text = posts[postId]
-  console.log('📥 Получен текст поста для id', postId, ':', text) // ← эту строку ВСТАВЛЯЕШЬ СЮДА
+  console.log('📥 Получен текст поста для id', postId, ':', text)
   return text || ''
 }

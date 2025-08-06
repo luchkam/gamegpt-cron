@@ -30,10 +30,17 @@ export async function postToVK(message) {
       console.log('✅ Пост опубликован в VK:', res.data.response.post_id)
     }
 
-    // Сохраняем текст поста в локальный файл для последующего использования в ответах
     if (res.data?.response?.post_id && message) {
-      console.log('📥 Сохраняем пост:', res.data.response.post_id, message)
-      savePost(res.data.response.post_id, message)
+      const postId = res.data.response.post_id
+      console.log('📥 Отправляем пост на сохранение через API:', postId)
+      try {
+        await axios.post(`${process.env.API_BASE_URL}/store-post`, {
+          id: postId,
+          text: message
+        })
+      } catch (err) {
+        console.error('❌ Ошибка при отправке POST запроса на сохранение поста:', err.message)
+      }
     }
 
     return res.data

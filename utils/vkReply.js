@@ -93,7 +93,7 @@ export async function handleVKCallback(data) {
     const ownerId = post.owner_id
     const text = post.text?.trim()
 
-    if (fromId === -GROUP_ID || !text) return
+    if (!text) return
 
     console.log('🖊 Сохраняем пост:', postId, '→', text)
     savePost(postId, text)

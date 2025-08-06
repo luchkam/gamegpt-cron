@@ -5,6 +5,8 @@ import { savePost, getPostText } from './vkMemory.js'
 const ACCESS_TOKEN = process.env.VK_ACCESS_TOKEN
 const GROUP_ID = parseInt(process.env.VK_GROUP_ID)
 
+const handledComments = new Set()
+
 export async function handleVKCallback(data) {
   console.log('📩 VK Callback получен:', JSON.stringify(data, null, 2))
 
@@ -55,6 +57,12 @@ export async function handleVKCallback(data) {
       const originalPostText = getPostText(postId)
       const context = originalPostText ? [originalPostText, text] : [text]
       console.log('🧠 Контекст для Assistant:', context)
+
+      if (handledComments.has(comment.id)) {
+        console.log('⛔ Этот комментарий уже обрабатывался в этой сессии — пропускаем')
+        return
+      }
+      handledComments.add(comment.id)
 
       const reply = await getReplyFromAssistant(context)
 

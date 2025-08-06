@@ -16,7 +16,7 @@ async function getOriginalPostText(postId) {
     const res = await axios.get('https://api.vk.com/method/wall.getById', {
       params: {
         posts: postFullId,
-        access_token: ACCESS_TOKEN,
+        access_token: VK_USER_ACCESS_TOKEN,
         v: '5.199',
       },
     })

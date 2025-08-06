@@ -90,7 +90,7 @@ export async function getReplyFromAssistant(messagesArray) {
       },
       body: JSON.stringify({
         role: 'user',
-        content: messagesArray.join('\n')
+        content: `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${messagesArray[1] ?? ''}`
       })
     })
 

@@ -3,6 +3,7 @@
 import axios from 'axios'
 import { getReplyFromAssistant } from './openai.js'
 import fs from 'fs'
+import { getPost } from './postCache.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
@@ -77,18 +78,7 @@ export async function handleVKCallback(data) {
     console.log('isReplyToAssistant =', isReplyToAssistant)
 
     if (isPostFromCommunity || isReplyToAssistant) {
-      // Получаем сам пост по ID
-      const postResponse = await axios.get('https://api.vk.com/method/wall.getById', {
-        params: {
-          posts: `${ownerId}_${postId}`,
-          access_token: ACCESS_TOKEN,
-          v: '5.199'
-        }
-      })
-
-      console.log('📨 Ответ от wall.getById:', JSON.stringify(postResponse.data, null, 2))
-
-      const originalPostText = postResponse.data?.response?.[0]?.text || ''
+      const originalPostText = getPost(postId)
       const context = originalPostText ? [originalPostText, text] : [text]
       console.log('🧠 Контекст для Assistant:', context)
       const reply = await getReplyFromAssistant(context)

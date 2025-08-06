@@ -36,19 +36,6 @@ app.post('/vk-callback', async (req, res) => {
 })
 
 const PORT = process.env.PORT || 3000
-
-app.post('/store-post', (req, res) => {
-  const { id, text } = req.body
-
-  if (!id || !text) {
-    console.error('❌ Не хватает id или text для логирования поста')
-    return res.status(400).send('Missing id or text')
-  }
-
-  console.log('📥 Пришёл запрос сохранить пост:', id, text)
-  res.sendStatus(200)
-})
-
 app.listen(PORT, () => {
   console.log(`🚀 Telegram webhook listening on port ${PORT}`)
 })

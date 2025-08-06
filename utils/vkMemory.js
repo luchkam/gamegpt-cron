@@ -1,7 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 
-const path = require('path')
 const FILE_PATH = path.resolve('./utils/posts.json')
 
 // Загружаем посты из файла (если есть)

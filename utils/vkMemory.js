@@ -2,6 +2,13 @@ import fs from 'fs'
 import path from 'path'
 
 const FILE_PATH = '/tmp/posts.json'
+fs.access(FILE_PATH, fs.constants.R_OK | fs.constants.W_OK, (err) => {
+  if (err) {
+    console.error('🚫 Нет доступа к posts.json:', err)
+  } else {
+    console.log('✅ Есть доступ к posts.json')
+  }
+})
 
 // Получаем текущие посты из файла
 function getPosts() {

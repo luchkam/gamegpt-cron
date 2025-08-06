@@ -86,8 +86,11 @@ export async function handleVKCallback(data) {
         }
       })
 
+      console.log('📨 Ответ от wall.getById:', JSON.stringify(postResponse.data, null, 2))
+
       const originalPostText = postResponse.data?.response?.[0]?.text || ''
       const context = originalPostText ? [originalPostText, text] : [text]
+      console.log('🧠 Контекст для Assistant:', context)
       const reply = await getReplyFromAssistant(context)
 
       await axios.get('https://api.vk.com/method/wall.createComment', {

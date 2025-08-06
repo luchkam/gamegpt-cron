@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
+const path = require('path')
 const FILE_PATH = path.resolve('./utils/posts.json')
 
 // Загружаем посты из файла (если есть)
@@ -16,9 +17,15 @@ try {
 }
 
 export function savePost(postId, text) {
+  const posts = getPosts()
   posts[postId] = text
-  fs.writeFileSync(FILE_PATH, JSON.stringify(posts, null, 2), 'utf-8')
-  console.log('💾 Пост сохранён:', postId)
+
+  try {
+    fs.writeFileSync(FILE_PATH, JSON.stringify(posts, null, 2), 'utf-8')
+    console.log('✅ posts.json обновлён успешно')
+  } catch (err) {
+    console.error('❌ Ошибка записи posts.json:', err)
+  }
 }
 
 export function getPostText(postId) {

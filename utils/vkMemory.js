@@ -1,13 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 
-const FILE_PATH = '/tmp/posts.json'
+const FILE_PATH = path.resolve('posts.json') // Теперь сохраняется рядом с кодом
 
 // Проверяем: если файла нет — создаём пустой JSON
 if (!fs.existsSync(FILE_PATH)) {
   try {
     fs.writeFileSync(FILE_PATH, '{}', 'utf-8')
-    console.log('🆕 posts.json создан в /tmp')
+    console.log('🆕 posts.json создан в проекте')
   } catch (err) {
     console.error('❌ Не удалось создать posts.json:', err)
   }
@@ -42,7 +42,7 @@ export function savePost(postId, text) {
 
   try {
     fs.writeFileSync(FILE_PATH, JSON.stringify(posts, null, 2), 'utf-8')
-    console.log(`✅ Пост ${postId} сохранён в /tmp/posts.json`)
+    console.log(`✅ Пост ${postId} сохранён в posts.json`)
   } catch (err) {
     console.error('❌ Ошибка записи posts.json:', err)
   }

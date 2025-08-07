@@ -97,6 +97,26 @@ export async function handleVKCallback(data) {
 
     console.log('🖊 Сохраняем пост:', postId, '→', text)
     savePost(postId, text)
+        // 🔄 Отвечаем только на посты пользователей (не сообщества)
+    if (fromId !== -GROUP_ID) {
+      console.log('🤖 Отправляем текст поста ассистенту...')
+      const reply = await getReplyFromAssistant([text])
+
+      console.log('💬 Ответ от ассистента на пост:', reply)
+
+      await axios.get('https://api.vk.com/method/wall.createComment', {
+        params: {
+          owner_id: ownerId,
+          post_id: postId,
+          message: reply,
+          from_group: 1,
+          access_token: ACCESS_TOKEN,
+          v: '5.199',
+        },
+      })
+
+      console.log('✅ Ответ на пост опубликован от имени сообщества')
+    }
     console.log('💾 Пост сохранён локально:', postId)
   }
 }

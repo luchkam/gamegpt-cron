@@ -22,7 +22,7 @@ export async function handleVKCallback(data) {
     const replyToUser = comment.reply_to_user
     const text = comment.text?.trim()
 
-    if (!text) return
+    if (fromId === -GROUP_ID || !text) return
 
     const isPostFromCommunity = ownerId === -GROUP_ID
     const isReplyToAssistant = replyToUser === -GROUP_ID

@@ -24,6 +24,12 @@ export async function handleVKCallback(data) {
 
     if (fromId === -GROUP_ID || !text) return
 
+    // 🛡️ Исключаем реакцию на комментарий, сделанный сообществом на пост (т.е. не ответ на чужой комментарий)
+    if (fromId === -GROUP_ID && !replyToUser) {
+      console.log('⏭ Это комментарий от сообщества, не ответ — не обрабатываем повторно')
+      return
+    }
+
     const isPostFromCommunity = ownerId === -GROUP_ID
     const isReplyToAssistant = replyToUser === -GROUP_ID
 

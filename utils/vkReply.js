@@ -84,6 +84,52 @@ export async function handleVKCallback(data) {
     }
   }
 
+  // 🔄 Дополнительная логика: комментарии под чужими постами
+  if (
+    type === 'wall_reply_new' &&
+    ownerId !== -GROUP_ID && // Пост не от сообщества
+    fromId !== -GROUP_ID &&  // Комментатор не бот
+    text
+  ) {
+    const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
+      params: {
+        owner_id: ownerId,
+        post_id: postId,
+        comment_id: comment.id,
+        access_token: ACCESS_TOKEN,
+        v: '5.199',
+        thread_items_count: 10,
+      },
+    })
+
+    const replies = commentsCheck.data?.response?.items || []
+    const alreadyReplied = replies.some((c) => c.from_id === -GROUP_ID)
+
+    if (alreadyReplied) return
+    if (handledComments.has(comment.id)) return
+
+    handledComments.add(comment.id)
+
+    const originalPostText = getPostText(postId)
+    const context = originalPostText ? [originalPostText, text] : [text]
+
+    const reply = await getReplyFromAssistant(context)
+
+    await axios.get('https://api.vk.com/method/wall.createComment', {
+      params: {
+        owner_id: ownerId,
+        post_id: postId,
+        message: reply,
+        from_group: 1,
+        reply_to_comment: comment.id,
+        access_token: ACCESS_TOKEN,
+        v: '5.199',
+      },
+    })
+
+    console.log('🤖 Ответ бота на комментарий под чужим постом отправлен')
+  }
+
   if (type === 'wall_post_new') {
     console.log('📝 Обнаружен новый пост на стене (wall_post_new)')
 

@@ -16,10 +16,10 @@ export async function handleTelegramUpdate(update) {
 
   if (isMention || isReplyToBot) {
     const allowedChatId = -1002271739944
-      if (msg.chat.id !== allowedChatId) {
-        console.log('⛔ Бот вызван вне разрешённой группы, игнорируем.')
-        return
-      }
+    if (msg.chat.id !== allowedChatId) {
+      console.log('⛔ Бот вызван вне разрешённой группы, игнорируем.')
+      return
+    }
     console.log('📩 Бот упомянут или ответ на него — обрабатываем')
 
     // Убираем @gamegpt_poster_bot из текста

@@ -1,9 +1,61 @@
 import { sendMessageToTelegram } from './telegram.js'
 import { getReplyFromAssistant } from './openai.js'
+import fetch from 'node-fetch' // ⬅️ Добавляем для обработки callbackQuery (если ещё не импортирован)
 
 export async function handleTelegramUpdate(update) {
   console.log('🔍 Полный апдейт:', JSON.stringify(update, null, 2))
 
+  // ================================
+  // 🧲 Обработка нажатий на inline-кнопки (callback_query)
+  // ================================
+  if (update.callback_query) {
+    const callback = update.callback_query
+    const chatId = callback.message.chat.id
+    const messageId = callback.message.message_id
+    const data = callback.data
+
+    console.log('🎯 Нажата кнопка:', data)
+
+    if (data === 'show_help') {
+      const helpText = `
+🎮 Я — геймер с искусственным интеллектом!
+
+💬 Пока помогаю только в групповом чате @gamegpt_ru:
+• Отвечаю на вопросы
+• Раскрываю лайфхаки, советы и фишки
+• Делюсь новостями из мира Minecraft, GTA, Roblox и других игр
+• Присылаю 2 раза в день самые свежие советы
+
+📲 В будущем сделаю:
+• Личный чат для каждого игрока — фишки больше не утекут другим!
+• Возможность отправить скрин, чтобы я подсказывал точнее, что делать
+
+🔧 Короче, работы ещё много — будем совершенствоваться!
+
+👾 А пока — вступай в групповой чат @gamegpt_ru. Будем побеждать!
+      `.trim()
+
+      await sendMessageToTelegram({
+        chat_id: chatId,
+        text: helpText
+      })
+
+      // Telegram требует ответить на callback_query
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callback_query_id: callback.id
+        })
+      })
+    }
+
+    return
+  }
+
+  // ================================
+  // 🧭 Обработка обычных сообщений
+  // ================================
   if (!update.message || !update.message.text) return
 
   const msg = update.message
@@ -17,7 +69,9 @@ export async function handleTelegramUpdate(update) {
   if (chatType === 'private') {
     if (text === '/start') {
       const welcomeText = `
-👋 Привет! Я пока не отвечаю в этом чате.
+👋 Привет! 🎮 Я — геймер с искусственным интеллектом!
+
+Я пока не отвечаю в этом чате.
 
 Но если ты вступишь в наш групповой чат, там я:
 • Отвечаю на комментарии
@@ -35,7 +89,7 @@ export async function handleTelegramUpdate(update) {
               { text: '🎮 Перейти в групповой чат', url: 'https://t.me/gamegpt_ru' }
             ],
             [
-              { text: '🤖 Что я умею?', url: 'https://t.me/gamegpt_ru' } // можно заменить на callback_data если нужно обрабатывать
+              { text: '🤖 Что я умею?', callback_data: 'show_help' } // ✅ заменено на callback
             ]
           ]
         }

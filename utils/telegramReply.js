@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { sendMessageToTelegram } from './telegram.js'
 import { getReplyFromAssistant } from './openai.js'
 
@@ -40,8 +41,6 @@ export async function handleTelegramUpdate(update) {
       })
 
       // Telegram требует ответить на callback_query
-      import axios from 'axios'
-
       await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/answerCallbackQuery`, {
         callback_query_id: callback.id
       })

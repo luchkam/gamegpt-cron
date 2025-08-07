@@ -6,6 +6,7 @@ const ACCESS_TOKEN = process.env.VK_ACCESS_TOKEN
 const GROUP_ID = parseInt(process.env.VK_GROUP_ID)
 
 const handledComments = new Set()
+const commentedPosts = new Set()
 
 export async function handleVKCallback(data) {
   console.log('📩 VK Callback получен:', JSON.stringify(data, null, 2))
@@ -146,6 +147,11 @@ export async function handleVKCallback(data) {
     const post = data.object
     const fromId = post.from_id
     const postId = post.id
+    if (commentedPosts.has(postId)) {
+      console.log('⛔ Этот пост уже обрабатывался в этой сессии — пропускаем')
+      return
+    }
+    commentedPosts.add(postId)
     const ownerId = post.owner_id
     const text = post.text?.trim()
 

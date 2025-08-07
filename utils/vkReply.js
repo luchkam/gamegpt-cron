@@ -84,50 +84,43 @@ export async function handleVKCallback(data) {
     }
   }
 
-  // 🔄 Дополнительная логика: комментарии под чужими постами
+  // 🆕 Логика: бот комментирует посты от других участников
   if (
-    type === 'wall_reply_new' &&
-    ownerId !== -GROUP_ID && // Пост не от сообщества
-    fromId !== -GROUP_ID &&  // Комментатор не бот
-    text
+    type === 'wall_post_new' &&
+    data.object.owner_id === -GROUP_ID && // Пост размещён на стене сообщества
+    data.object.from_id !== -GROUP_ID // Автор — не само сообщество
   ) {
-    const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
-      params: {
-        owner_id: ownerId,
-        post_id: postId,
-        comment_id: comment.id,
-        access_token: ACCESS_TOKEN,
-        v: '5.199',
-        thread_items_count: 10,
-      },
-    })
+    const post = data.object
+    const postId = post.id
+    const ownerId = post.owner_id
+    const text = post.text?.trim()
 
-    const replies = commentsCheck.data?.response?.items || []
-    const alreadyReplied = replies.some((c) => c.from_id === -GROUP_ID)
+    if (!text) {
+      console.log('⚠️ Пост без текста — пропускаем')
+      return
+    }
 
-    if (alreadyReplied) return
-    if (handledComments.has(comment.id)) return
+    console.log('💬 Новый пост от участника на стене сообщества:', postId)
 
-    handledComments.add(comment.id)
-
-    const originalPostText = getPostText(postId)
-    const context = originalPostText ? [originalPostText, text] : [text]
-
+    const context = [text]
     const reply = await getReplyFromAssistant(context)
 
-    await axios.get('https://api.vk.com/method/wall.createComment', {
-      params: {
-        owner_id: ownerId,
-        post_id: postId,
-        message: reply,
-        from_group: 1,
-        reply_to_comment: comment.id,
-        access_token: ACCESS_TOKEN,
-        v: '5.199',
-      },
-    })
+    try {
+      await axios.get('https://api.vk.com/method/wall.createComment', {
+        params: {
+          owner_id: ownerId,
+          post_id: postId,
+          message: reply,
+          from_group: 1,
+          access_token: ACCESS_TOKEN,
+          v: '5.199',
+        },
+      })
 
-    console.log('🤖 Ответ бота на комментарий под чужим постом отправлен')
+      console.log('🤖 Бот оставил комментарий под чужим постом:', postId)
+    } catch (error) {
+      console.error('❌ Ошибка при попытке комментирования чужого поста:', error.response?.data || error.message)
+    }
   }
 
   if (type === 'wall_post_new') {

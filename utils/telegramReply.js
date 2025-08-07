@@ -1,6 +1,5 @@
 import { sendMessageToTelegram } from './telegram.js'
 import { getReplyFromAssistant } from './openai.js'
-import fetch from 'node-fetch' // ⬅️ Добавляем для обработки callbackQuery (если ещё не импортирован)
 
 export async function handleTelegramUpdate(update) {
   console.log('🔍 Полный апдейт:', JSON.stringify(update, null, 2))
@@ -41,12 +40,10 @@ export async function handleTelegramUpdate(update) {
       })
 
       // Telegram требует ответить на callback_query
-      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/answerCallbackQuery`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callback_query_id: callback.id
-        })
+      import axios from 'axios'
+
+      await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/answerCallbackQuery`, {
+        callback_query_id: callback.id
       })
     }
 

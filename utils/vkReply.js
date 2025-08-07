@@ -95,6 +95,23 @@ export async function handleVKCallback(data) {
     const ownerId = post.owner_id
     const text = post.text?.trim()
 
+    // 🔁 Проверка: не оставляли ли мы уже комментарий под этим постом
+    const commentsCheck = await axios.get('https://api.vk.com/method/wall.getComments', {
+      params: {
+        owner_id: ownerId,
+        post_id: postId,
+        access_token: ACCESS_TOKEN,
+        v: '5.199'
+      },
+    })
+
+    const comments = commentsCheck.data?.response?.items || []
+    const alreadyCommented = comments.some(c => c.from_id === -GROUP_ID)
+    if (alreadyCommented) {
+      console.log('⏭ Уже есть комментарий от сообщества — пропускаем')
+      return
+    }
+
     if (!text) {
       console.log('⚠️ Пост без текста — пропускаем')
       return

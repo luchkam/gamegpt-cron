@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const FILE_PATH = path.resolve('posts.json') // Теперь сохраняется рядом с кодом
+const FILE_PATH = '/var/data/posts.json'
 
 // Проверяем: если файла нет — создаём пустой JSON
 if (!fs.existsSync(FILE_PATH)) {

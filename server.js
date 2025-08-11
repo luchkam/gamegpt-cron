@@ -22,18 +22,18 @@ app.post('/vk-callback', async (req, res) => {
   const { type } = req.body
 
   if (type === 'confirmation') {
-    // 👉 Отвечаем VK кодом подтверждения из .env
     return res.send(process.env.VK_CONFIRMATION_CODE)
   }
 
-  try {
-    console.log('🆔 VK PID:', process.pid)
-    await handleVKCallback(req.body)
-    res.send('ok') // VK требует ровно 'ok'
-  } catch (err) {
-    console.error('❌ Ошибка обработки VK webhook:', err)
-    res.sendStatus(500)
-  }
+  console.log('🆔 VK PID:', process.pid)
+
+  // ⚡️ Сразу подтверждаем получение, чтобы VK не делал ретраи
+  res.send('ok') // VK требует ровно 'ok'
+
+  // 🛠 Обрабатываем событие асинхронно, без блокировки ответа VK
+  handleVKCallback(req.body).catch((err) => {
+    console.error('❌ Ошибка обработки VK webhook (async):', err)
+  })
 })
 
 const PORT = process.env.PORT || 3000

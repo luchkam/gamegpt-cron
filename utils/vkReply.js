@@ -60,8 +60,31 @@ export async function handleVKCallback(data) {
     console.log('isReplyToAssistant =', isReplyToAssistant)
 
     if (isPostFromCommunity || isReplyToAssistant) {
-      const originalPostText = getPostText(postId)
-      const context = originalPostText ? [originalPostText, text] : [text]
+      let postText = getPostText(postId)
+
+      if (!postText) {
+        try {
+          console.log('🧩 Fallback: получаем текст поста через wall.getById')
+          const wallRes = await axios.get('https://api.vk.com/method/wall.getById', {
+            params: {
+              posts: `${ownerId}_${postId}`, // owner_id (для сообщества — отрицательный) + '_' + post_id
+              access_token: ACCESS_TOKEN,
+              v: '5.199',
+            },
+          })
+          const items = wallRes.data?.response?.items || []
+          if (items[0]?.text) {
+            postText = items[0].text
+            console.log('✅ Текст поста получен с VK API:', postText)
+          } else {
+            console.log('⚠️ Не удалось получить текст поста через VK API:', JSON.stringify(wallRes.data))
+          }
+        } catch (e) {
+          console.error('❌ Ошибка VK wall.getById:', e?.response?.data || e.message)
+        }
+      }
+
+      const context = postText ? [postText, text] : [text]
       console.log('🧠 Контекст для Assistant:', context)
 
       if (handledComments.has(comment.id)) {

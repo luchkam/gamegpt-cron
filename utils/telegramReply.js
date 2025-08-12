@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { sendMessageToTelegram } from './telegram.js'
 import { getReplyFromAssistant } from './openai.js'
+import { getHistory, pushMessage, prune } from './contextStore.js'
 
 export async function handleTelegramUpdate(update) {
   console.log('🔍 Полный апдейт:', JSON.stringify(update, null, 2))

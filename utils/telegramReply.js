@@ -119,17 +119,36 @@ export async function handleTelegramUpdate(update) {
     // Убираем @gamegpt_poster_bot из текста
     const cleanedText = text.replace(new RegExp(`@${botUsername}`, 'gi'), '').trim()
 
-    let context = []
+    // подчищаем историю (удаляем записи старше 2 часов)
+    try { prune(2) } catch (e) { console.error('⚠️ prune error:', e) }
 
-    if (msg.reply_to_message?.text) {
-      context.push(msg.reply_to_message.text) // оригинальный пост — всегда, если есть
-    }
+    const chatId = msg.chat.id
+    const userId = msg.from.id
 
-    context.push(cleanedText) // сообщение пользователя
-    console.log('📥 Контекст сообщения:', context)
+    // берём последние до 3 реплик диалога (пользователь/бот)
+    const history = getHistory(chatId, userId)
+    const historyLines = history.map(m => `${m.role === 'assistant' ? 'Бот' : 'Пользователь'}: ${m.content}`)
 
-    const reply = await getReplyFromAssistant(context)
+    // формируем один компактный промпт
+    const prompt = [
+      'Контекст последних сообщений (до 3):',
+      ...historyLines,
+      msg.reply_to_message?.text ? `Пост/сообщение, на которое отвечают: ${msg.reply_to_message.text}` : null,
+      `Пользователь: ${cleanedText}`,
+      'Ответь кратко и по делу.'
+    ].filter(Boolean).join('\n')
+
+    console.log('📥 Сформирован prompt для Assistant:', prompt)
+
+    // в OpenAI отправляем одну строку, чтобы не ломать VK-логику
+    const reply = await getReplyFromAssistant([prompt])
     console.log('🤖 Ответ от Assistant:', reply)
+    try {
+      pushMessage(chatId, userId, 'user', cleanedText, 3)       // сохраняем запрос
+      pushMessage(chatId, userId, 'assistant', reply, 3)        // сохраняем ответ
+    } catch (e) {
+      console.error('⚠️ pushMessage error:', e)
+    }
 
     const payload = {
       chat_id: msg.chat.id,

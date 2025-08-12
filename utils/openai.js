@@ -92,9 +92,20 @@ export async function getReplyFromAssistant(messagesArray) {
       'Content-Type': 'application/json',
       'OpenAI-Beta': 'assistants=v2'
     },
+    let content
+    if (messagesArray.length === 2) {
+      const commentText = messagesArray[1] || ''
+      content = `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`
+    } else {
+      // Телеграм: передаём уже сформированный промпт одной строкой
+      content = messagesArray.join('\n')
+    }
+
+    console.log('📨 Отправляем ассистенту такой prompt:', content)
+
     body: JSON.stringify({
       role: 'user',
-      content: `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`
+      content
     })
   })
 

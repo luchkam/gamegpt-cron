@@ -80,35 +80,33 @@ export async function getReplyFromAssistant(messagesArray) {
   const threadId = res1Json.id
   console.log('📌 Thread ID:', threadId)
 
-  // ✅ Вставляем лог до запроса
-  const commentText = messagesArray.length > 1 ? messagesArray[1] : ''
-  console.log('📨 Отправляем ассистенту такой prompt:', `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`)
-
-  console.log('📤 Отправляем сообщение в thread...')
-  await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'OpenAI-Beta': 'assistants=v2'
-    },
+    // ⚙️ Формируем content ДО запроса (VK = 2 элемента, Telegram = 1 строка)
     let content
-    if (messagesArray.length === 2) {
-      const commentText = messagesArray[1] || ''
-      content = `Вот пост:\n${messagesArray[0]}\n\nВот комментарий:\n${commentText}`
+    if (Array.isArray(messagesArray) && messagesArray.length === 2) {
+      const postText = messagesArray[0] || ''
+      const commentText2 = messagesArray[1] || ''
+      content = `Вот пост:\n${postText}\n\nВот комментарий:\n${commentText2}`
     } else {
-      // Телеграм: передаём уже сформированный промпт одной строкой
-      content = messagesArray.join('\n')
+      // Telegram: уже сформированный промпт одной строкой
+      content = (messagesArray && messagesArray.length > 0) ? messagesArray.join('\n') : ''
     }
 
     console.log('📨 Отправляем ассистенту такой prompt:', content)
 
-    body: JSON.stringify({
-      role: 'user',
-      content
+    console.log('📤 Отправляем сообщение в thread...')
+    await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'OpenAI-Beta': 'assistants=v2'
+      },
+      body: JSON.stringify({
+        role: 'user',
+        content
+      })
     })
-  })
-
+    
     console.log('⚙️ Запускаем ассистента...')
     const run = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
       method: 'POST',
